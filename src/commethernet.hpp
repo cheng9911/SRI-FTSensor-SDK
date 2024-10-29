@@ -24,7 +24,7 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #ifndef SRI_FTSENSOR_SDK_COMMETHERNET_HPP
 #define SRI_FTSENSOR_SDK_COMMETHERNET_HPP
 
-#include <sri/sensorcomm.hpp>
+#include "sensorcomm.hpp"
 #include <boost/asio.hpp>
 #include <string>
 

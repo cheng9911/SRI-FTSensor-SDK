@@ -25,8 +25,8 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #ifndef SRI_FTSENSOR_SDK_SRI_SENSOR_H
 #define SRI_FTSENSOR_SDK_SRI_SENSOR_H
 
-#include <sri/sensorcomm.hpp>
-#include <sri/types.hpp>
+#include "sensorcomm.hpp"
+#include "types.hpp"
 
 #include <memory>
 #include <regex>

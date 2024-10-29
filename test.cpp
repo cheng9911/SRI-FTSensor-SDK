@@ -2,8 +2,8 @@
 // Created by think on 2021/4/7.
 //
 
-#include <sri/ftsensor.hpp>
-#include <sri/commethernet.hpp>
+#include "src/ftsensor.hpp"
+#include "src/commethernet.hpp"
 
 #include <iostream>
 
