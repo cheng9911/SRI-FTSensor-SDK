@@ -42,24 +42,41 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include <chrono>
 
-//#define BOOST_THREAD_VERSION 5 //using the v5 version of boost::thread
-#define DELAY_US 500 //tcp delay in us
+#include "sri/Logger.h"
+
+// #define BOOST_THREAD_VERSION 5 //using the v5 version of boost::thread
+#define DELAY_US 500 // tcp delay in us
 #define WAIT_TIME 20 // Max_waiting_time = WAIT_TIME * DELAY_US
 
-
 namespace SRI {
-    class FTSensor {
+    class DllExport FTSensor {
     public:
-        explicit FTSensor(SensorComm *pcomm) : commPtr(pcomm) {
+        // explicit FTSensor(SensorComm *pcomm) : commPtr(pcomm)
+        // {
+        //     if (!commPtr->initialize())
+        //     {
+        //         std::cout << "Sensor initializing failed" << std::endl;
+        //     }
+        // }
+
+
+        explicit FTSensor(SensorComm *pcomm) : commPtr(pcomm), Fx(0), Fy(0), Fz(0), Tx(0), Ty(0), Tz(0), ZeroFx(0),
+                                               ZeroFy(0), ZeroFz(0), ZeroTx(0), ZeroTy(0), ZeroTz(0) {
+            logPtr = Logger::getInstance("FTSensor");
+
             if (!commPtr->initialize()) {
-                std::cout << "Sensor initializing failed" << std::endl;
+                logPtr->error("Sensor initializing failed");
+                // std::cout << "Sensor initializing failed" << std::endl;
             }
         }
+        boost::posix_time::ptime recorded_time_;  // 存储记录的时间
 
         IpAddr getIpAddress() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return IpAddr();
             }
 
@@ -80,7 +97,8 @@ namespace SRI {
 
         bool setIpAddress(const IpAddr &ip) {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -104,7 +122,8 @@ namespace SRI {
 
         MacAddr getMacAddress() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return MacAddr();
             }
 
@@ -125,7 +144,8 @@ namespace SRI {
 
         bool setMacAddress(const MacAddr &mac) {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -149,7 +169,8 @@ namespace SRI {
 
         GateAddr getGateWay() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return GateAddr();
             }
 
@@ -170,7 +191,8 @@ namespace SRI {
 
         bool setGateWay(const GateAddr &gate) {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -191,7 +213,8 @@ namespace SRI {
 
         NetMask getNetMask() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return NetMask();
             }
 
@@ -208,7 +231,8 @@ namespace SRI {
 
         bool setNetMask(const NetMask &mask) {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -229,7 +253,8 @@ namespace SRI {
 
         Gains getChannelGains() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return Gains();
             }
 
@@ -247,11 +272,12 @@ namespace SRI {
                 boost::split(resInString, response, boost::is_any_of(";"), boost::algorithm::token_compress_on);
             }
             catch (boost::bad_lexical_cast &e) {
-                std::cout << "ERROR::FTSensor::getChannelGains():" << e.what() << std::endl;
+                logPtr->error("Error in boost::split()");
+                // std::cout << "ERROR::FTSensor::getChannelGains():" << e.what() << std::endl;
             }
             Gains gains;
 
-            for (auto &res : resInString) {
+            for (auto &res: resInString) {
                 gains.push_back(std::stof(res));
             }
 
@@ -260,7 +286,8 @@ namespace SRI {
 
         SampleRate getSamplingRate() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return SampleRate();
             }
 
@@ -278,7 +305,8 @@ namespace SRI {
 
         bool setSamplingRate(SampleRate rate) {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -299,7 +327,8 @@ namespace SRI {
 
         Voltages getExcitationVoltages() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return Voltages();
             }
 
@@ -317,11 +346,12 @@ namespace SRI {
                 boost::split(resInString, response, boost::is_any_of(";"), boost::algorithm::token_compress_on);
             }
             catch (boost::bad_lexical_cast &e) {
-                std::cout << "ERROR::FTSensor::getExcitationVoltages():" << e.what() << std::endl;
+                logPtr->error("Error in boost::split()");
+                // std::cout << "ERROR::FTSensor::getExcitationVoltages():" << e.what() << std::endl;
             }
             Voltages voltages;
 
-            for (auto &res : resInString) {
+            for (auto &res: resInString) {
                 voltages.push_back(std::stof(res));
             }
 
@@ -330,7 +360,8 @@ namespace SRI {
 
         Sensitivities getSensorSensitivities() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return Sensitivities();
             }
 
@@ -348,11 +379,12 @@ namespace SRI {
                 boost::split(resInString, response, boost::is_any_of(";"), boost::algorithm::token_compress_on);
             }
             catch (boost::bad_lexical_cast &e) {
-                std::cout << "ERROR::FTSensor::getSensorSensitivities():" << e.what() << std::endl;
+                logPtr->error("Error in boost::split()");
+                // std::cout << "ERROR::FTSensor::getSensorSensitivities():" << e.what() << std::endl;
             }
             Sensitivities sens;
 
-            for (auto &res : resInString) {
+            for (auto &res: resInString) {
                 sens.push_back(std::stof(res));
             }
 
@@ -361,13 +393,14 @@ namespace SRI {
 
         bool setSensorSensitivities(const Sensitivities &sens) {
             std::string parameters;
-            for (auto &s : sens) {
+            for (auto &s: sens) {
                 parameters += boost::lexical_cast<std::string>(s) + ";";
             }
             parameters = parameters.substr(0, parameters.find_last_of(';'));
 
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -388,7 +421,8 @@ namespace SRI {
 
         Offsets getAmplifierZeroOffsets() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return Offsets();
             }
 
@@ -407,11 +441,12 @@ namespace SRI {
                              boost::algorithm::token_compress_on);
             }
             catch (boost::bad_lexical_cast &e) {
-                std::cout << "ERROR::FTSensor::getAmplifierZeroOffsets():" << e.what() << std::endl;
+                logPtr->error("Error in boost::split()");
+                // std::cout << "ERROR::FTSensor::getAmplifierZeroOffsets():" << e.what() << std::endl;
             }
             Offsets offsets;
 
-            for (auto &res : resInString) {
+            for (auto &res: resInString) {
                 offsets.push_back(std::stof(res));
             }
 
@@ -419,13 +454,15 @@ namespace SRI {
         }
 
         bool setAmplifierZeroOffsets(const Offsets &offsets) {
-            std::cout << "SRI::FTSensor::setAmplifierZeroOffsets::Has not been implemented." << std::endl;
+            logPtr->error("SRI::FTSensor::setAmplifierZeroOffsets::Has not been implemented.");
+            // std::cout << "SRI::FTSensor::setAmplifierZeroOffsets::Has not been implemented." << std::endl;
             return false;
         }
 
         RTDataMode getRealTimeDataMode() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return RTDataMode();
             }
 
@@ -444,41 +481,46 @@ namespace SRI {
                              boost::algorithm::token_compress_on);
             }
             catch (boost::bad_lexical_cast &e) {
-                std::cout << "ERROR::FTSensor::getRealTimeDataMode():" << e.what() << std::endl;
+                logPtr->error("Error in FTSensor getRealTimeDataMode()" + std::string(e.what()));
+                // std::cout << "ERROR::FTSensor::getRealTimeDataMode():" << e.what() << std::endl;
             }
 
-            if (resInString.size() != 4)
-                std::cout << "ERROR::FTSensor::getRealTimeDataMode():Parse Data False" << std::endl;
-
-
             RTDataMode rtDataMode;
-            //1. Get the relevant analog channels. format: (A01,A02,A03,A04,A05,A06)
+
+            if (resInString.size() != 4) {
+                logPtr->error("ERROR::FTSensor::getRealTimeDataMode():Parse Data False");
+                // std::cout << "ERROR::FTSensor::getRealTimeDataMode():Parse Data False" << std::endl;
+                return rtDataMode;
+            }
+
+
+            // 1. Get the relevant analog channels. format: (A01,A02,A03,A04,A05,A06)
             std::vector<std::string> channelsInString;
             boost::trim_if(resInString[0], boost::is_any_of("()"));
             boost::split(channelsInString, resInString[0], boost::is_any_of("(),"),
                          boost::algorithm::token_compress_on);
-            rtDataMode.channelOrder.clear(); //rtDataMode has default value 1,2,3,4,5,6
-            for (auto &cs : channelsInString) {
+            rtDataMode.channelOrder.clear(); // rtDataMode has default value 1,2,3,4,5,6
+            for (auto &cs: channelsInString) {
                 auto c = std::stoi(cs.substr(cs.find('A') + 1));
                 rtDataMode.channelOrder.push_back(c);
             }
-            //2. The unit of data uploaded from M8128.
+            // 2. The unit of data uploaded from M8128.
             rtDataMode.DataUnit = resInString[1][0];
-            //3. Number of data which are desired.
+            // 3. Number of data which are desired.
             rtDataMode.PNpCH = std::stoi(resInString[2]);
-            //4. Filter model. Set to WMA. format: (WMA:1,1,2,3,4)
+            // 4. Filter model. Set to WMA. format: (WMA:1,1,2,3,4)
             std::vector<std::string> fmInString;
             boost::trim_if(resInString[3], boost::is_any_of("()"));
             boost::split(fmInString, resInString[3], boost::is_any_of("():"),
                          boost::algorithm::token_compress_on);
 
             rtDataMode.FM = fmInString[0];
-            //5. WMA's relevant parameters, default 1.
+            // 5. WMA's relevant parameters, default 1.
             std::vector<std::string> weightsInString;
             boost::split(weightsInString, fmInString[1], boost::is_any_of(","),
                          boost::algorithm::token_compress_on);
             rtDataMode.filterWeights.clear();
-            for (auto &ws : weightsInString) {
+            for (auto &ws: weightsInString) {
                 auto w = std::stoi(ws);
                 rtDataMode.filterWeights.push_back(w);
             }
@@ -487,31 +529,32 @@ namespace SRI {
         }
 
         bool setRealTimeDataMode(const RTDataMode &rtDataMode) {
-            //format (A02,A03,A04,A01,A05,A06);C;1;(WMA:1,1,2,3)
-            //1.
+            // format (A02,A03,A04,A01,A05,A06);C;1;(WMA:1,1,2,3)
+            // 1.
             std::string parameters;
             parameters += "(";
-            for (auto &c : rtDataMode.channelOrder) {
+            for (auto &c: rtDataMode.channelOrder) {
                 parameters += boost::str(boost::format("A%02d,") % c);
             }
             boost::trim_right_if(parameters, boost::is_any_of(","));
             parameters += ");";
-            //2.
+            // 2.
             parameters += rtDataMode.DataUnit;
             parameters += ";";
-            //3.
+            // 3.
             parameters += std::to_string(rtDataMode.PNpCH);
             parameters += ";";
-            //4.
+            // 4.
             std::string weights;
-            for (auto &w : rtDataMode.filterWeights) {
+            for (auto &w: rtDataMode.filterWeights) {
                 weights += boost::str(boost::format("%d,") % w);
             }
             boost::trim_right_if(weights, boost::is_any_of(","));
             parameters += boost::str(boost::format("(%s:%s)") % rtDataMode.FM % weights);
 
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -531,7 +574,8 @@ namespace SRI {
 
         RTDataValid getRealTimeDataValid() {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return RTDataValid();
             }
 
@@ -549,7 +593,8 @@ namespace SRI {
 
         bool setRealTimeDataValid(const RTDataValid &rtDataValid) {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return false;
             }
 
@@ -572,7 +617,8 @@ namespace SRI {
         std::vector<RTData<T>>
         getRealTimeDataOnce(const RTDataMode &rtMode = RTDataMode(), const RTDataValid &rtValid = "SUM") {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return std::vector<RTData<T>>();
             }
 
@@ -584,7 +630,7 @@ namespace SRI {
             std::vector<int8_t> recvbuf;
             commPtr->read(recvbuf);
 
-            //parse the received buffer
+            // parse the received buffer
             uint32_t paritybit = 1;
             if (rtValid == "SUM") {
                 paritybit = 1;
@@ -593,27 +639,31 @@ namespace SRI {
             }
 
             if (((uint8_t) recvbuf[0] != 0xAA) || ((uint8_t) recvbuf[1] != 0x55)) { // FRAME HEADER FAULT
-                std::cout << "SRI::REAL-TIME-ERROR::Frame header is fault. " << std::endl;
+                logPtr->error("SRI::REAL-TIME-ONCE-ERROR::Frame header is fault.");
+                // std::cout << "SRI::REAL-TIME-ONCE-ERROR::Frame header is fault. " << std::endl;
                 return std::vector<RTData<T>>();
             }
 
             uint32_t PackageLength = recvbuf[2] * 256 + recvbuf[3];
             if (PackageLength != recvbuf.size() - 4) {
-                std::cout << "SRI::REAL-TIME-ERROR::Package Length is fault. " << std::endl;
+                logPtr->error("SRI::REAL-TIME-ONCE-ERROR::Package Length is fault.");
+                // std::cout << "SRI::REAL-TIME-ERROR::Package Length is fault. " << std::endl;
                 return std::vector<RTData<T>>();
             }
 
             uint32_t dataLen = PackageLength - paritybit - 2;
             if (dataLen != rtMode.channelOrder.size() * sizeof(T) * rtMode.PNpCH) {
-                std::cout << "SRI::REAL-TIME-ERROR::Expected Data Length is fault. Maybe Data Mode need update "
-                          << std::endl;
+                logPtr->error("SRI::REAL-TIME-ONCE-ERROR::Data Length is fault.Maybe Data Mode need update");
+                // std::cout << "SRI::REAL-TIME-ERROR::Expected Data Length is fault. Maybe Data Mode need update "
+                //           << std::endl;
                 return std::vector<RTData<T>>();
             }
 
-            //TODO:
+            // TODO:
             if (rtValid == "SUM") {
                 if ((uint8_t) recvbuf.back() != getChecksum(&(recvbuf[6]), dataLen)) {
-                    std::cout << "SRI::REAL-TIME-ERROR::Checksum is incorrect. " << std::endl;
+                    logPtr->error("SRI::REAL-TIME-ONCE-ERROR::Checksum is incorrect.");
+                    // std::cout << "SRI::REAL-TIME-ERROR::Checksum is incorrect. " << std::endl;
                     return std::vector<RTData<T>>();
                 }
             } else if (rtValid == "CRC32") {
@@ -621,7 +671,8 @@ namespace SRI {
                 int8_t *pCRC = &(recvbuf[recvbuf.size() - 4]);
                 for (int i = 0; i < 4; i++) {
                     if (pCRC[i] != ((int8_t *) &crc32)[i]) {
-                        std::cout << "SRI::REAL-TIME-ERROR::CRC32 is incorrect. " << std::endl;
+                        logPtr->error("SRI::REAL-TIME-ONCE-ERROR::CRC32 is incorrect.");
+                        // std::cout << "SRI::REAL-TIME-ERROR::CRC32 is incorrect. " << std::endl;
                         return std::vector<RTData<T>>();
                     }
                 }
@@ -646,37 +697,92 @@ namespace SRI {
         /// \param rtMode
         /// \param rtValid
         template<typename T>
-        void startRealTimeDataRepeatedly(boost::function<void(std::vector<RTData<T>>&)> rtDataHandler,
-                                         const RTDataMode &rtMode = RTDataMode(),
-                                         const RTDataValid &rtValid = "SUM") {
+        void startRealTimeDataRepeatedly(
+                const RTDataMode &rtMode = RTDataMode(),
+                const RTDataValid &rtValid = "SUM") {
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return;
             }
 
             commPtr->write("AT+GSD\r\n");
 
             isRepeatedly = true;
-            boost::thread(&FTSensor::realTimeDataCyclingHandler<T>, this, rtDataHandler, rtMode, rtValid).detach();
-
-            std::cout << "Getting real time data repeatedly." << std::endl;
+            boost::thread(&FTSensor::realTimeDataCyclingHandler<T>, this, rtMode, rtValid).detach();
+            logPtr->info("Getting real time data repeatedly.");
+            // std::cout << "Getting real time data repeatedly." << std::endl;
         }
 
         void stopRealTimeDataRepeatedly() {
+            isRepeatedly = false;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+
             if (!commPtr->isValid()) {
-                std::cout << "ERROR::Communication is not valid" << std::endl;
+                logPtr->error("Communication is not valid");
+                // std::cout << "ERROR::Communication is not valid" << std::endl;
                 return;
             }
-
+            logPtr->info("Stop FT!!!");
+            // std::cout << "Stop FT!!!" << std::endl;
             commPtr->write("AT+GSD=STOP\r\n");
 
-            isRepeatedly = false;
-            std::cout << "Stop real time data repeatedly" << std::endl;
+            logPtr->info("Stop real time data repeatedly");
+            // std::cout << "Stop real time data repeatedly" << std::endl;
         }
 
+        void getForceAndTorque(double &fx, double &fy, double &fz, double &tx, double &ty, double &tz) {
+            std::lock_guard<std::mutex> lock(dataMutex); // 确保数据读取是线程安全的
+            fx = Fx - ZeroFx;
+            fy = Fy - ZeroFy;
+            fz = Fz - ZeroFz;
+            tx = Tx - ZeroTx;
+            ty = Ty - ZeroTy;
+            tz = Tz - ZeroTz;
+        }
+
+        void setZeroForceAndTorque(double &zerofx, double &zerofy, double &zerofz, double &zerotx, double &zeroty,
+                                   double &zerotz) {
+
+            ZeroFx = zerofx;
+            ZeroFy = zerofy;
+            ZeroFz = zerofz;
+            ZeroTx = zerotx;
+            ZeroTy = zeroty;
+            ZeroTz = zerotz;
+        }
+
+
+
+
     private:
-        std::shared_ptr<SensorComm> commPtr; //store the polymorphic pointer of communication
-        bool isRepeatedly = false; // if start RT Data Repeatedly, set true
+        Logger::logger_ptr logPtr; ///< Logger pointer
+
+
+
+        std::shared_ptr<SensorComm> commPtr; // store the polymorphic pointer of communication
+        bool isRepeatedly = false;           // if start RT Data Repeatedly, set true
+        double Fx, Fy, Fz, Tx, Ty, Tz;       // store the force and torque data
+        double ZeroFx, ZeroFy, ZeroFz, ZeroTx, ZeroTy, ZeroTz;// store the zero force and torque data
+        std::mutex dataMutex;
+
+        void rtDataHandler(std::vector<RTData<float>> &rtData) {
+            // static int i = 0;
+            std::lock_guard<std::mutex> lock(dataMutex); // 确保数据更新是线程安全的
+            for (int i = 0; i < rtData.size(); i++) {
+                Fx = rtData[i][0];
+                Fy = rtData[i][1];
+                Fz = rtData[i][2];
+                Tx = rtData[i][3];
+                Ty = rtData[i][4];
+                Tz = rtData[i][5];
+            }
+            recorded_time_ = boost::posix_time::microsec_clock::local_time();
+            // std::cout << "Time recorded: " << recorded_time_ << std::endl;
+            // i++;
+        }
 
         /// Generate Command Buffer
         /// \param[in] Command      The CMD such as UARTCFG.
@@ -710,7 +816,6 @@ namespace SRI {
                 nEnd = s.find("\r\n");
             }
 
-
             return s.substr(nStart, nEnd - nStart);
         }
 
@@ -728,69 +833,79 @@ namespace SRI {
         }
 
         template<typename T>
-        void realTimeDataCyclingHandler(boost::function<void(std::vector<RTData<T>>&)> rtDataHandler,
-                                        const RTDataMode &rtMode,
-                                        const RTDataValid &rtValid) {
-
+        void realTimeDataCyclingHandler(
+                const RTDataMode &rtMode,
+                const RTDataValid &rtValid) {
             while (isRepeatedly) {
                 if (!commPtr->isValid()) {
-                    std::cout << "ERROR::Communication is not valid" << std::endl;
-                    return;
+                    logPtr->error("Communication is not valid");
+                    // std::cout << "ERROR::Communication is not valid" << std::endl;
+                    continue;
                 }
 
                 while (commPtr->available() == 0) {
+                    if (isRepeatedly == false)
+                        return;
                     std::this_thread::sleep_for(std::chrono::microseconds(DELAY_US));
                 }
 
                 std::vector<int8_t> recvbuf;
                 commPtr->read(recvbuf);
 
-                //parse the received buffer
+                // parse the received buffer
                 uint32_t paritybit = 1;
                 if (rtValid == "SUM") {
                     paritybit = 1;
                 } else if (rtValid == "CRC32") {
                     paritybit = 4;
                 }
-
-                while(!recvbuf.empty()) {
+                if(recvbuf.empty())
+                {
+                    logPtr->warn("Received buffer is empty.");
+                }
+                while (!recvbuf.empty()) {
 
                     if (((uint8_t) recvbuf[0] != 0xAA) || ((uint8_t) recvbuf[1] != 0x55)) { // FRAME HEADER FAULT
-                        std::cout << "SRI::REAL-TIME-ERROR::Frame header is fault. " << std::endl;
-                        return;
+                        logPtr->warn("Frame header is fault.");
+                        // std::cout << "SRI::REAL-TIME-ERROR::Frame header is fault. " << std::endl;
+                        break;
                     }
 
                     uint32_t PackageLength = recvbuf[2] * 256 + recvbuf[3];
 
-                    if(PackageLength != recvbuf.size() - 4) {
-                        std::cout << "SRI::REAL-TIME-WARNING::Package Length not equal to received buf. Package Length is: "
-                                    << PackageLength + 4 << " .  buf size is: " << recvbuf.size() << std::endl;
+                    if (PackageLength != recvbuf.size() - 4) {
+                        // std::cout << "SRI::REAL-TIME-WARNING::Package Length not equal to received buf. Package Length is: "
+                        //           << PackageLength + 4 << " .  buf size is: " << recvbuf.size() << std::endl;
                     }
 
                     if (PackageLength > recvbuf.size() - 4) {
-                        std::cout << "SRI::REAL-TIME-ERROR::Package Length is fault. " << std::endl;
-                        return;
+                        logPtr->warn("Package Length is fault.");
+                        // std::cout << "SRI::REAL-TIME-ERROR::Package Length is fault. " << std::endl;
+                        break;
                     }
 
                     uint32_t dataLen = PackageLength - paritybit - 2;
                     if (dataLen != rtMode.channelOrder.size() * sizeof(T) * rtMode.PNpCH) {
-                        std::cout << "SRI::REAL-TIME-ERROR::Expected Data Length is fault. Maybe Data Mode need update "
-                                  << std::endl;
-                        return;
+                        logPtr->warn("Data Length is fault.");
+                        // std::cout << "SRI::REAL-TIME-ERROR::Expected Data Length is fault. Maybe Data Mode need update "
+                        //           << std::endl;
+                        break;
                     }
 
                     if (rtValid == "SUM") {
                         if ((uint8_t) recvbuf[PackageLength + 3] != getChecksum(&(recvbuf[6]), dataLen)) {
-                            std::cout << "SRI::REAL-TIME-ERROR::Checksum is incorrect. " << std::endl;
-                            return;
+                            logPtr->warn("Checksum is incorrect.");
+                            // std::cout << "SRI::REAL-TIME-ERROR::Checksum is incorrect. " << std::endl;
+                            break;
                         }
                     } else if (rtValid == "CRC32") {
                         uint32_t crc32 = getCRC32(&(recvbuf[6]), dataLen);
                         int8_t *pCRC = &(recvbuf[recvbuf.size() - 4]);
                         for (int i = 0; i < 4; i++) {
                             if (pCRC[i] != ((int8_t *) &crc32)[i]) {
-                                std::cout << "SRI::REAL-TIME-ERROR::CRC32 is incorrect. " << std::endl;
-                                return;
+                                logPtr->warn("CRC32 is incorrect.");
+                                // std::cout << "SRI::REAL-TIME-ERROR::CRC32 is incorrect. " << std::endl;
+                                break;
                             }
                         }
                     }
@@ -807,18 +922,15 @@ namespace SRI {
 
                     rtDataHandler(rtData); // Callback function
 
-                    if(PackageLength != recvbuf.size() - 4) {
+                    if (PackageLength != recvbuf.size() - 4) {
                         std::vector<int8_t>(recvbuf.begin() + PackageLength + 4, recvbuf.end()).swap(recvbuf);
-                    }
-                    else
+                    } else
                         break;
                 }
             }
         }
 
-
     }; // class FTSensor
-} //namespace SRI
+} // namespace SRI
 
-
-#endif //SRI_FTSENSOR_SDK_SRI_SENSOR_H
+#endif // SRI_FTSENSOR_SDK_SRI_SENSOR_H
