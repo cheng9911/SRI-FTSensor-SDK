@@ -52,17 +52,30 @@ int main(int argc, char* argv[])
     // 数据采集
     while (isRunning) {
         sensor.getForceAndTorque(Fx, Fy, Fz, Tx, Ty, Tz);
+        if (sensor.recorded_time_.is_not_a_date_time())
+        {
+            throw std::runtime_error("No time has been recorded yet.");
+        }
+        boost::posix_time::ptime current_time = boost::posix_time::microsec_clock::local_time();
+        boost::posix_time::time_duration duration = current_time - sensor.recorded_time_;
+
         // 格式化时间为字符串
         std::string time_str = boost::posix_time::to_simple_string(sensor.recorded_time_);
-
-        ofs << time_str << ", " << Fx << ", " << Fy << ", " << Fz << ", " << Tx << ", " << Ty << ", " << Tz << std::endl;
-
-        // 实时刷新文件
-        ofs.flush();
+        if (duration.total_milliseconds() > 30)
+        {
+            std::cout << "Time difference: " << duration.total_milliseconds() << " milliseconds" << std::endl;
+            std::cout << "current time: " << time_str << std::endl;
+            break;
+        }
+        std::cout<<"time: "<<time_str<<", Fx: "<<Fx<<", Fy: "<<Fy<<", Fz: "<<Fz<<", Tx: "<<Tx<<", Ty: "<<Ty<<", Tz: "<<Tz<<std::endl;
+        // ofs << time_str << ", " << Fx << ", " << Fy << ", " << Fz << ", " << Tx << ", " << Ty << ", " << Tz << std::endl;
+        //
+        // // 实时刷新文件
+        // ofs.flush();
 
         // 模拟延时，每隔 60 秒采集一次数据
-        usleep(60000000);
-        // usleep(3000);
+
+        usleep(2000);
     }
 
     // 关闭文件
