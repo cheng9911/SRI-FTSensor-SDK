@@ -15,3 +15,9 @@ add_executable(untest src/untest.cpp src/Logger.cpp
         src/untest.cpp)
 target_include_directories(untest PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(untest Boost::system Boost::thread Threads::Threads spdlog::spdlog_header_only)
+
+add_executable(testc src/testc.cpp src/Logger.cpp
+        )
+target_include_directories(testc PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(testc Boost::system Boost::thread Threads::Threads spdlog::spdlog_header_only)
+        

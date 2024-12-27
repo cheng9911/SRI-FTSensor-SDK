@@ -47,7 +47,7 @@ Shenyang Institute of Automation, Chinese Academy of Sciences.
 #include "sri/Logger.h"
 
 // #define BOOST_THREAD_VERSION 5 //using the v5 version of boost::thread
-#define DELAY_US 1 // tcp delay in us
+#define DELAY_US 500 // tcp delay in us
 #define WAIT_TIME 20 // Max_waiting_time = WAIT_TIME * DELAY_US
 
 namespace SRI
